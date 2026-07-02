@@ -3,6 +3,8 @@
 
 class LoadingOverlay : public cocos2d::CCLayer {
 protected:
+    ~LoadingOverlay();
+
     bool init() override;
     bool ccTouchBegan(cocos2d::CCTouch* pTouch, cocos2d::CCEvent* pEvent) override;
     void keyBackClicked() override;

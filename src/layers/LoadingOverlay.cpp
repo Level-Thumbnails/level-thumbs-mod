@@ -54,7 +54,11 @@ void LoadingOverlay::fadeOut() {
 }
 
 void LoadingOverlay::registerWithTouchDispatcher() {
-    CCDirector::sharedDirector()->getTouchDispatcher()->addTargetedDelegate(this, -9999, true);
+    CCTouchDispatcher::get()->addTargetedDelegate(this, -9999, true);
+}
+
+LoadingOverlay::~LoadingOverlay() {
+    CCTouchDispatcher::get()->removeDelegate(this);
 }
 
 bool LoadingOverlay::init() {
@@ -62,15 +66,10 @@ bool LoadingOverlay::init() {
         return false;
     }
     auto winSize = CCDirector::sharedDirector()->getWinSize();
-    this->registerWithTouchDispatcher();
+
     this->setTouchEnabled(true);
     this->setKeypadEnabled(true);
-    //this->setTouchPriority(-9999);
     this->setZOrder(CCDirector::get()->getRunningScene()->getHighestChildZ() + 1);
-    //CCDirector::sharedDirector()
-    // CCDirector::sharedDirector()->getTouchDispatcher()->registerForcePrio(this,-9999);
-    CCTouchDispatcher::get()->registerForcePrio(this, 2);
-    handleTouchPriority(this,true);
 
     // this->handler
     loadingCircle = LoadingCircle::create();
