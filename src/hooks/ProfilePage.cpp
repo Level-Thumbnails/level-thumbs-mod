@@ -8,6 +8,8 @@
 
 using namespace geode::prelude;
 
+#include <alphalaneous.badgify/include/Badgify.hpp>
+
 // most of this source file is unused, see the $on_mod(Loaded) macro further down for badges
 /*
 class $modify(ProfilePageHook,ProfilePage) {
