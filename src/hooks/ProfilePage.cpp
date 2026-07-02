@@ -83,7 +83,7 @@ $on_mod(Loaded) {
         [] (const alpha::badgify::Badge& badge) {
             if (!Mod::get()->getSettingValue<bool>("thumb-role-badges")) return;
 
-            ThumbnailRole role = AuthManager::get().getCachedBadgeForAccount(badge.user.data()->m_accountID);
+            std::optional<ThumbnailRole> role = AuthManager::get().getCachedBadgeForAccount(badge.user.data()->m_accountID);
             if (!role.has_value()) {
                 async::spawn(
                     AuthManager::get().fetchBadgeForAccount(badge.user.data()->m_accountID),
@@ -111,7 +111,7 @@ $on_mod(Loaded) {
         [] (const alpha::badgify::Badge& badge) {
             if (!Mod::get()->getSettingValue<bool>("thumb-role-badges")) return;
 
-            ThumbnailRole role = AuthManager::get().getCachedBadgeForAccount(badge.user.data()->m_accountID);
+            std::optional<ThumbnailRole> role = AuthManager::get().getCachedBadgeForAccount(badge.user.data()->m_accountID);
             if (!role.has_value()) {
                 async::spawn(
                     AuthManager::get().fetchBadgeForAccount(badge.user.data()->m_accountID),
@@ -139,7 +139,7 @@ $on_mod(Loaded) {
         [] (const alpha::badgify::Badge& badge) {
             if (!Mod::get()->getSettingValue<bool>("thumb-role-badges")) return;
 
-            ThumbnailRole role = AuthManager::get().getCachedBadgeForAccount(badge.user.data()->m_accountID);
+            std::optional<ThumbnailRole> role = AuthManager::get().getCachedBadgeForAccount(badge.user.data()->m_accountID);
             if (!role.has_value()) {
                 async::spawn(
                     AuthManager::get().fetchBadgeForAccount(badge.user.data()->m_accountID),
@@ -167,7 +167,7 @@ $on_mod(Loaded) {
         [] (const alpha::badgify::Badge& badge) {
             if (!Mod::get()->getSettingValue<bool>("thumb-role-badges")) return;
 
-            ThumbnailRole role = AuthManager::get().getCachedBadgeForAccount(badge.user.data()->m_accountID);
+            std::optional<ThumbnailRole> role = AuthManager::get().getCachedBadgeForAccount(badge.user.data()->m_accountID);
             if (!role.has_value()) {
                 async::spawn(
                     AuthManager::get().fetchBadgeForAccount(badge.user.data()->m_accountID),
@@ -195,7 +195,7 @@ $on_mod(Loaded) {
         [] (const alpha::badgify::Badge& badge) {
             if (!Mod::get()->getSettingValue<bool>("thumb-role-badges")) return;
 
-            ThumbnailRole role = AuthManager::get().getCachedBadgeForAccount(badge.user.data()->m_accountID);
+            std::optional<ThumbnailRole> role = AuthManager::get().getCachedBadgeForAccount(badge.user.data()->m_accountID);
             if (!role.has_value()) {
                 async::spawn(
                     AuthManager::get().fetchBadgeForAccount(badge.user.data()->m_accountID),
