@@ -43,7 +43,20 @@ class $modify(ProfilePageHook,ProfilePage) {
 
     void onUpdate(CCObject* sender) {
         ProfilePage::onUpdate(sender);
-        AuthManager::get().purgeBadgeForAccount(m_accountID);
+
+        if (!Mod::get()->getSettingValue<bool>("thumb-role-badges")) return;
+
+        auto& AM = AuthManager::get();
+
+        AM.purgeBadgeForAccount(m_accountID);
+        m_fields->m_userInfoListener.spawn(
+            AM.fetchBadgeForAccount(m_accountID),
+            [this](Result<ThumbnailRole> res) {
+                if (res) {
+                    this->addBadge(res.unwrap());
+                }
+            }
+        );
     }
 
     void loadPageFromUserInfo(GJUserScore* score) {
@@ -53,16 +66,6 @@ class $modify(ProfilePageHook,ProfilePage) {
 
         if (auto role = AuthManager::get().getCachedBadgeForAccount(m_accountID)) {
             this->addBadge(role.value());
-            return;
         }
-
-        m_fields->m_userInfoListener.spawn(
-            AuthManager::get().fetchBadgeForAccount(m_accountID),
-            [this](Result<ThumbnailRole> res) {
-                if (res) {
-                    this->addBadge(res.unwrap());
-                }
-            }
-        );
     }
 };
