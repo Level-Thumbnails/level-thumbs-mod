@@ -88,7 +88,7 @@ $on_mod(Loaded) {
                 async::spawn(
                     AuthManager::get().fetchBadgeForAccount(badge.user.data()->m_accountID),
                     [badge](Result<ThumbnailRole> res) {
-                        if (!res || res.unwrap() == ThumbnailRole::NONE || res.unwrap() != ThumbnailRole::USER) return;
+                        if (!res || res.isErr() || res.unwrap() == ThumbnailRole::NONE || res.unwrap() != ThumbnailRole::USER) return;
                         CCSprite* theBadgeSprite = CCSprite::createWithSpriteFrameName("LT_Badge_THE.png"_spr);
                         Loader::get()->queueInMainThread([badge, spr = geode::Ref(theBadgeSprite)]() {
                             alpha::badgify::showBadge(badge, spr);
@@ -116,7 +116,7 @@ $on_mod(Loaded) {
                 async::spawn(
                     AuthManager::get().fetchBadgeForAccount(badge.user.data()->m_accountID),
                     [badge](Result<ThumbnailRole> res) {
-                        if (!res || res.unwrap() == ThumbnailRole::NONE || res.unwrap() != ThumbnailRole::VERIFIED) return;
+                        if (!res || res.isErr() || res.unwrap() == ThumbnailRole::NONE || res.unwrap() != ThumbnailRole::VERIFIED) return;
                         CCSprite* theBadgeSprite = CCSprite::createWithSpriteFrameName("LT_Badge_VerThumbnailer.png"_spr);
                         Loader::get()->queueInMainThread([badge, spr = geode::Ref(theBadgeSprite)]() {
                             alpha::badgify::showBadge(badge, spr);
@@ -144,7 +144,7 @@ $on_mod(Loaded) {
                 async::spawn(
                     AuthManager::get().fetchBadgeForAccount(badge.user.data()->m_accountID),
                     [badge](Result<ThumbnailRole> res) {
-                        if (!res || res.unwrap() == ThumbnailRole::NONE || res.unwrap() != ThumbnailRole::MODERATOR) return;
+                        if (!res || res.isErr() || res.unwrap() == ThumbnailRole::NONE || res.unwrap() != ThumbnailRole::MODERATOR) return;
                         CCSprite* theBadgeSprite = CCSprite::createWithSpriteFrameName("LT_Badge_ThumbnailMod.png"_spr);
                         Loader::get()->queueInMainThread([badge, spr = geode::Ref(theBadgeSprite)]() {
                             alpha::badgify::showBadge(badge, spr);
@@ -172,7 +172,7 @@ $on_mod(Loaded) {
                 async::spawn(
                     AuthManager::get().fetchBadgeForAccount(badge.user.data()->m_accountID),
                     [badge](Result<ThumbnailRole> res) {
-                        if (!res || res.unwrap() == ThumbnailRole::NONE || res.unwrap() != ThumbnailRole::ADMIN) return;
+                        if (!res || res.isErr() || res.unwrap() == ThumbnailRole::NONE || res.unwrap() != ThumbnailRole::ADMIN) return;
                         CCSprite* theBadgeSprite = CCSprite::createWithSpriteFrameName("LT_Badge_ThumbnailAdmin.png"_spr);
                         Loader::get()->queueInMainThread([badge, spr = geode::Ref(theBadgeSprite)]() {
                             alpha::badgify::showBadge(badge, spr);
@@ -200,7 +200,7 @@ $on_mod(Loaded) {
                 async::spawn(
                     AuthManager::get().fetchBadgeForAccount(badge.user.data()->m_accountID),
                     [badge](Result<ThumbnailRole> res) {
-                        if (!res || res.unwrap() == ThumbnailRole::NONE || res.unwrap() != ThumbnailRole::OWNER) return;
+                        if (!res || res.isErr() || res.unwrap() == ThumbnailRole::NONE || res.unwrap() != ThumbnailRole::OWNER) return;
                         CCSprite* theBadgeSprite = CCSprite::createWithSpriteFrameName("LT_Badge_Owner.png"_spr);
                         Loader::get()->queueInMainThread([badge, spr = geode::Ref(theBadgeSprite)]() {
                             alpha::badgify::showBadge(badge, spr);
