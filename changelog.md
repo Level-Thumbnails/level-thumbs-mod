@@ -1,3 +1,9 @@
+# v2.4.3
+- Improved badge caching even more.
+- Badges now also show up in comments.
+- Badges for regular users are currently disabled.
+- Loading overlay (whenever you submit a thumbnail) no longer messes up touch priority.
+
 # v2.4.2
 - Fix a bug where the thumbnail role badge could appear multiple times on your profile.
 - Added caching for viewed badges.
