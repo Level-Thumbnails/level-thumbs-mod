@@ -9,7 +9,6 @@
 #include <Geode/ui/Notification.hpp>
 #include <Geode/utils/web.hpp>
 #include <Geode/loader/SettingV3.hpp>
-#include <Geode/modify/MenuLayer.hpp>
 
 using namespace geode::prelude;
 
@@ -101,6 +100,82 @@ AuthManager::LinkFuture AuthManager::linkAccount(std::string linkSecret) {
     ));
 }
 
+void AuthManager::initialSync() {
+    async::spawn(
+        web::WebRequest()
+            .userAgent(USER_AGENT)
+            .get(fmt::format("{}/user/badges", Settings::thumbnailAPIBaseURL())),
+        [this](web::WebResponse res) {
+            if (!res.ok()) return;
+
+            for (auto& [key, value] : res.json().unwrapOrDefault()["data"]) {
+                auto role = getRoleByName(key);
+                if (role == ThumbnailRole::NONE) continue;
+
+                for (auto& accID : value) {
+                    if (!accID.isNumber()) continue;
+                    m_badgeCache[accID.asInt().unwrapOr(0)] = role;
+                }
+            }
+        }
+    );
+
+    if (!this->isLoggedIn()) return;
+
+    async::spawn(
+        web::WebRequest()
+            .header("Authorization", fmt::format("Bearer {}", Mod::get()->getSavedValue<std::string>("token")))
+            .userAgent(USER_AGENT)
+            .get(fmt::format("{}/auth/session", Settings::thumbnailAPIBaseURL())),
+        [this](web::WebResponse res) {
+            if (!res.ok()) {
+                log::error("Session check failed: {}", res.string().unwrapOrDefault());
+                m_myRole = getRoleByName(Mod::get()->getSavedValue<std::string>("cached_role"));
+                return;
+            }
+
+            auto json = res.json().unwrapOrDefault();
+            auto role = json["user"]["role"].asString().unwrapOr("user");
+            m_myRole = getRoleByName(role);
+
+            Mod::get()->setSavedValue<std::string>("cached_role", role);
+        }
+    );
+}
+
+void AuthManager::purgeBadgeForAccount(int accountID) {
+    m_badgeCache.erase(accountID);
+}
+
+std::optional<ThumbnailRole> AuthManager::getCachedBadgeForAccount(int accountID) {
+    auto it = m_badgeCache.find(accountID);
+    if (it != m_badgeCache.end()) {
+        return it->second;
+    }
+    return std::nullopt;
+}
+
+AuthManager::BadgeFuture AuthManager::fetchBadgeForAccount(int accountID) {
+    if (m_badgeCache.contains(accountID)) {
+        co_return Ok(m_badgeCache[accountID]);
+    }
+
+    auto res = co_await web::WebRequest()
+        .userAgent(USER_AGENT)
+        .get(fmt::format("{}/user/gd/{}", Settings::thumbnailAPIBaseURL(), accountID));
+
+    if (!res.ok()) {
+        log::error("Badge fetch failed: {}", res.string().unwrapOrDefault());
+        co_return Err("badge fetch failed");
+    }
+
+    auto role = res.json().unwrapOrDefault()["data"]["role"].asString().unwrapOrDefault();
+    auto role_enum = getRoleByName(role);
+    m_badgeCache[accountID] = role_enum;
+
+    co_return Ok(role_enum);
+}
+
 AuthManager::LoginFuture AuthManager::login() {
     if (GJAccountManager::get()->m_accountID == 0) {
         co_return Err("not logged into an account");
@@ -146,7 +221,7 @@ AuthManager::LoginFuture AuthManager::login() {
     co_return Ok("success!");
 }
 
-std::string AuthManager::getToken(){
+std::string AuthManager::getToken() {
     return Mod::get()->getSavedValue<std::string>("token");
 }
 
@@ -159,47 +234,10 @@ class $modify(AccountHelpLayer) {
     }
 };
 
-$execute {
+$on_mod(Loaded) {
     listenForSettingChanges<std::string>("level-thumbnails-api", [](std::string value) {
         Mod::get()->getSaveContainer().erase("token");
     });
+
+    AuthManager::get().initialSync();
 }
-
-class $modify(RoleCheckMenuLayer,MenuLayer){
-    struct Fields {
-        TaskHolder<web::WebResponse> m_myInfoListener;
-    };
-    bool init() {
-        if (!MenuLayer::init()) return false;
-
-        if (AuthManager::get().checkedRole) return true;
-
-        auto token = AuthManager::get().getToken();
-
-        if (token.empty()) return true;
-        
-        auto req = web::WebRequest();
-        req.header("Authorization", fmt::format("Bearer {}", token));
-
-        this->m_fields->m_myInfoListener.spawn(
-            req.get(fmt::format("{}/auth/session",Settings::thumbnailAPIBaseURL())),
-            [](web::WebResponse res){
-                if (res.ok()) {
-                    auto json = res.json().unwrapOrDefault();
-                    auto role = json["user"]["role"].asString().unwrapOr("user");
-
-                    AuthManager::get().myRole = getRoleByName(role);
-                    AuthManager::get().checkedRole = true;
-
-                    Mod::get()->setSavedValue<std::string>("cached_role", role);
-                    geode::log::info("role sucessfully synced, {}", role);
-                } else {
-                    geode::log::error("Session check failed: {}", res.string());
-                    AuthManager::get().myRole = getRoleByName(Mod::get()->getSavedValue<std::string>("cached_role"));
-                }
-            }
-        );
-
-        return true;
-    }
-};

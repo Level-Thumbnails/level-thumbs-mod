@@ -10,13 +10,11 @@ using namespace geode::prelude;
 
 class $modify(ProfilePageHook,ProfilePage) {
     struct Fields {
-        TaskHolder<web::WebResponse> m_userInfoListener;
+        TaskHolder<AuthManager::BadgeResult> m_userInfoListener;
     };
 
     void addBadge(ThumbnailRole role) {
-        if (role == ThumbnailRole::NONE) return;
-
-        geode::log::info("badge added: {}",(int)role);
+        if (role == ThumbnailRole::NONE || role == ThumbnailRole::USER) return;
 
         auto existingBadge = this->getChildByIDRecursive("levelthumbs-badge"_spr);
         if (existingBadge) existingBadge->removeFromParent();
@@ -45,36 +43,24 @@ class $modify(ProfilePageHook,ProfilePage) {
 
     void onUpdate(CCObject* sender) {
         ProfilePage::onUpdate(sender);
-        AuthManager::get().badgeCache.erase(m_accountID);
+        AuthManager::get().purgeBadgeForAccount(m_accountID);
     }
 
     void loadPageFromUserInfo(GJUserScore* score) {
         ProfilePage::loadPageFromUserInfo(score);
 
         if (!Mod::get()->getSettingValue<bool>("thumb-role-badges")) return;
-        
-        auto req = web::WebRequest();
-        req.userAgent(USER_AGENT);
 
-        auto AM = &AuthManager::get();
-
-        if (AM->badgeCache.contains(m_accountID)) {
-            addBadge(AM->badgeCache[m_accountID]);
+        if (auto role = AuthManager::get().getCachedBadgeForAccount(m_accountID)) {
+            this->addBadge(role.value());
             return;
         }
 
-        this->m_fields->m_userInfoListener.spawn(
-            req.get(fmt::format("{}/user/gd/{}",Settings::thumbnailAPIBaseURL(), this->m_accountID)),
-            [this](web::WebResponse res){
-                auto AM = &AuthManager::get();
-                if (res.ok()){
-                    auto json = res.json().unwrapOrDefault();
-                    auto role = json["data"]["role"].asString().unwrapOr("user");
-                    auto role_enum = getRoleByName(role);
-                    addBadge(role_enum);
-                    AM->badgeCache[m_accountID] = role_enum;
-                } else {
-                    AM->badgeCache[m_accountID] = ThumbnailRole::NONE;
+        m_fields->m_userInfoListener.spawn(
+            AuthManager::get().fetchBadgeForAccount(m_accountID),
+            [this](Result<ThumbnailRole> res) {
+                if (res) {
+                    this->addBadge(res.unwrap());
                 }
             }
         );

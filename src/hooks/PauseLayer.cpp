@@ -143,7 +143,7 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
         }
 
         constexpr double MIN_TIME = 5.0;
-        if (playLayer->m_gameState.m_levelTime < MIN_TIME && !m_fields->m_shownCloseToStartWarning && AuthManager::get().myRole < ThumbnailRole::VERIFIED) {
+        if (playLayer->m_gameState.m_levelTime < MIN_TIME && !m_fields->m_shownCloseToStartWarning && !AuthManager::get().roleIsEqualOrAbove(ThumbnailRole::VERIFIED)) {
             m_fields->m_shownCloseToStartWarning = true;
             FLAlertLayer::create(
                 "Warning",
@@ -155,7 +155,7 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
             return;
         }
 
-        if (playLayer->m_lowDetailMode && !m_fields->m_shownLowDetailWarning && AuthManager::get().myRole < ThumbnailRole::VERIFIED) {
+        if (playLayer->m_lowDetailMode && !m_fields->m_shownLowDetailWarning && !AuthManager::get().roleIsEqualOrAbove(ThumbnailRole::VERIFIED)) {
             m_fields->m_shownLowDetailWarning = true;
             FLAlertLayer::create(
                 "Warning",

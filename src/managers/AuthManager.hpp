@@ -78,12 +78,8 @@ inline std::optional<ThumbnailRoleInfo> getRoleInfoByName(std::string_view role)
 class AuthManager {
 private:
     AuthManager() = default;
+
 public:
-    ThumbnailRole myRole = ThumbnailRole::NONE;
-    bool checkedRole = false;
-
-    std::unordered_map<int,ThumbnailRole> badgeCache = {};
-
     AuthManager(AuthManager const&) = delete;
     AuthManager(AuthManager&&) = delete;
     AuthManager& operator=(AuthManager const&) = delete;
@@ -92,17 +88,33 @@ public:
     using LoginResult = geode::Result<std::string>;
     using LinkResult = geode::Result<std::string>;
     using UploadResult = geode::Result<std::string>;
+    using BadgeResult = geode::Result<ThumbnailRole>;
 
     using LoginFuture = arc::Future<LoginResult>;
     using LinkFuture = arc::Future<LinkResult>;
     using UploadFuture = arc::Future<UploadResult>;
+    using BadgeFuture = arc::Future<BadgeResult>;
+
+    static AuthManager& get();
 
     static bool isLoggedIn();
+    static std::string getToken();
+
     LoginFuture login();
     UploadFuture uploadThumbnail(std::string_view filename, int levelID, std::string note, geode::Function<void(geode::ZStringView)> onProgress = nullptr);
     LinkFuture linkAccount(std::string linkSecret);
-    
-    static std::string getToken();
 
-    static AuthManager& get();
+    void initialSync();
+    void purgeBadgeForAccount(int accountID);
+    std::optional<ThumbnailRole> getCachedBadgeForAccount(int accountID);
+    BadgeFuture fetchBadgeForAccount(int accountID);
+    std::optional<ThumbnailRole> myRole() const { return m_myRole; }
+    bool roleIsEqualOrAbove(ThumbnailRole role) const {
+        auto myRole = this->myRole();
+        return myRole.has_value() && myRole.value() >= role;
+    }
+
+private:
+    std::unordered_map<int, ThumbnailRole> m_badgeCache = {};
+    std::optional<ThumbnailRole> m_myRole = std::nullopt;
 };
