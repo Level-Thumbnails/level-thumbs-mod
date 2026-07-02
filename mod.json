@@ -168,6 +168,7 @@
     },
     "dependencies": {
         "geode.node-ids": ">=1.7.1",
-        "prevter.imageplus": ">=1.0.0"
+        "prevter.imageplus": ">=1.0.0",
+        "alphalaeous.badgify": ">=1.0.1"
     }
 }

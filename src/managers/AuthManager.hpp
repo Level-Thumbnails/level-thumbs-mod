@@ -23,6 +23,8 @@ struct ThumbnailRoleInfo {
         : badge_sprite(badge_sprite), name(name), description(description) {}
 };
 
+// this array is unused, see the $on_mod(Loaded) macro in ProfilePage.cpp for badges
+/*
 constexpr std::array THUMBNAIL_ROLES = {
     ThumbnailRoleInfo{
         "LT_Badge_THE.png"_spr,
@@ -50,6 +52,7 @@ constexpr std::array THUMBNAIL_ROLES = {
         "This user is an owner of the <co>Level Thumbnails</c> mod."
     }
 };
+*/
 
 static geode::utils::StringMap<ThumbnailRole> THUMBNAIL_ROLE_SERVER_NAMES = {
     {"user", ThumbnailRole::USER},

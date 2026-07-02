@@ -1,3 +1,5 @@
+// this entire source file is unused, see the $on_mod(Loaded) macro in ProfilePage.cpp for badges
+/*
 #include <Geode/Geode.hpp>
 #include <Geode/modify/CommentCell.hpp>
 #include <Geode/ui/Button.hpp>
@@ -48,3 +50,4 @@ class $modify(CommentCellHook, CommentCell) {
         usernameMenu->updateLayout();
     }
 };
+*/
