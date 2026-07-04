@@ -88,5 +88,11 @@ std::unique_ptr<uint8_t[]> RenderTexture::getData() const {
     auto data = std::make_unique<uint8_t[]>(m_width * m_height * 4);
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
     glReadPixels(0, 0, m_width, m_height, GL_RGBA, GL_UNSIGNED_BYTE, data.get());
+
+    // force full opacity for all pixels
+    for (size_t i = 3; i < m_width * m_height * 4; i += 4) {
+        data[i] = 255;
+    }
+
     return data;
 }
