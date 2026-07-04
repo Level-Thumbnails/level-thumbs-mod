@@ -90,8 +90,8 @@ std::unique_ptr<uint8_t[]> RenderTexture::getData() const {
     glReadPixels(0, 0, m_width, m_height, GL_RGBA, GL_UNSIGNED_BYTE, data.get());
 
     // force full opacity for all pixels
-    for (size_t i = 3; i < m_width * m_height * 4; i += 4) {
-        data[i] = 255;
+    for (size_t i = 0; i < m_width * m_height; ++i) {
+        data[i * 4 + 3] = 255;
     }
 
     return data;
