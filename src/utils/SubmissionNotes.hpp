@@ -22,7 +22,7 @@ namespace notes {
         auto diff = level->m_difficulty;
 
         if (level->m_ratingsSum != 0)
-            diff = static_cast<GJDifficulty>(level->m_ratingsSum / 10);
+            diff = static_cast<GJDifficulty>(level->m_ratingsSum / level->m_ratings);
 
         if (level->m_demon > 0) {
             switch (level->m_demonDifficulty) {
@@ -46,12 +46,18 @@ namespace notes {
     }
 
     inline static double getAccurateProgress(PlayLayer* pl) {
-        return std::clamp(
+        auto progress = std::clamp(
             pl->m_level->m_timestamp > 0
                 ? pl->m_gameState.m_levelTime * 240.0 / pl->m_level->m_timestamp * 100.0
                 : pl->m_player1->getPositionX() * 100.0 / pl->m_levelLength,
             0.0, 100.0
         );
+
+        if (!std::isfinite(progress)) {
+            return pl->getCurrentPercent();
+        }
+
+        return progress;
     }
 
     inline static std::string buildSubmissionNote() {
