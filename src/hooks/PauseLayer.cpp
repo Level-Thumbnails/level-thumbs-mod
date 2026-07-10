@@ -12,11 +12,46 @@
 
 using namespace geode::prelude;
 
-class $modify(NoclipTesterPlayLayer, PlayLayer) {
-    struct Fields { std::optional<uint32_t> lastDeathTick; };
+class $modify(LTPlayLayer, PlayLayer) {
+    struct Fields {
+        TaskHolder<web::WebResponse> isPendingCheck;
+        std::optional<uint32_t> lastDeathTick;
+        uint32_t pendingCount = 0;
+    };
 
     static void onModify(auto& self) {
         (void) self.setHookPriority("PlayLayer::destroyPlayer", -0x600000);
+    }
+
+    bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
+        if (!PlayLayer::init(level, useReplay, dontCreateObjects)) {
+            return false;
+        }
+
+        if (!Settings::thumbnailTakingEnabled()) {
+            return true;
+        }
+
+        if (!level || level->m_levelID <= 0 || level->m_levelType == GJLevelType::Editor) {
+            return true;
+        }
+
+        m_fields->isPendingCheck.spawn(
+            web::WebRequest()
+                .userAgent(USER_AGENT)
+                .get(fmt::format("{}/pending/level/{}", Settings::thumbnailAPIBaseURL(), level->m_levelID)),
+            [this](web::WebResponse res) {
+                if (!res.ok()) {
+                    log::error("Pending check failed: {}", res.errorMessage());
+                    return;
+                }
+
+                auto json = res.json().unwrapOrDefault();
+                m_fields->pendingCount = json["count"].asInt().unwrapOr(0);
+            }
+        );
+
+        return true;
     }
 
     bool isCurrentlyDead() {
@@ -54,6 +89,7 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
     struct Fields {
         bool m_shownCloseToStartWarning = false;
         bool m_shownLowDetailWarning = false;
+        bool m_shownAlreadyHasPending = false;
     };
 
     void customSetup() {
@@ -74,8 +110,18 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
         }
 
         auto screenshotSprite = CCSprite::createWithSpriteFrameName("thumbnailButton.png"_spr);
-        screenshotSprite->setScale(0.6f);
+        screenshotSprite->setScale(0.65f);
+
+        if (static_cast<LTPlayLayer*>(playLayer)->m_fields->pendingCount > 0) {
+            auto alreadyPending = CCSprite::createWithSpriteFrameName("highObjectIcon_001.png");
+            alreadyPending->setPosition({ 40.f, 40.f });
+            alreadyPending->setScale(1.5f);
+            screenshotSprite->addChild(alreadyPending);
+        }
+
         auto screenshotButton = CCMenuItemSpriteExtra::create(screenshotSprite, this, menu_selector(ThumbnailPauseLayer::onScreenshot));
+        screenshotButton->setID("take-screenshot"_spr);
+
         rightButtonMenu->addChild(screenshotButton);
         rightButtonMenu->updateLayout();
     }
@@ -132,7 +178,25 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
             return;
         }
 
-        if (static_cast<NoclipTesterPlayLayer*>(playLayer)->isCurrentlyDead()) {
+        auto pendingCount = static_cast<LTPlayLayer*>(playLayer)->m_fields->pendingCount;
+        if (pendingCount > 0) {
+            if (!m_fields->m_shownAlreadyHasPending) {
+                m_fields->m_shownAlreadyHasPending = true;
+                FLAlertLayer::create(
+                    "Warning",
+                    fmt::format(
+                        "This level already has <cy>{}</c> pending thumbnail(s).\n\n"
+                        "Your submission may be <cr>rejected</c> to avoid duplicates. "
+                        "Please consider waiting until the current queue is cleared and request a replacement if needed.",
+                        pendingCount
+                    ),
+                    "OK"
+                )->show();
+                return;
+            }
+        }
+
+        if (static_cast<LTPlayLayer*>(playLayer)->isCurrentlyDead()) {
             FLAlertLayer::create(
                 "Screenshot Error",
                 "You cannot take a thumbnail while the player is <cr>dead</c>.\n"
@@ -142,29 +206,31 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
             return;
         }
 
-        constexpr double MIN_TIME = 5.0;
-        if (playLayer->m_gameState.m_levelTime < MIN_TIME && !m_fields->m_shownCloseToStartWarning && !AuthManager::get().roleIsEqualOrAbove(ThumbnailRole::VERIFIED)) {
-            m_fields->m_shownCloseToStartWarning = true;
-            FLAlertLayer::create(
-                "Warning",
-                "You are trying to take a screenshot <cy>very close to level start</c>!\n"
-                "There's a high chance it will be <cr>rejected</c> by moderators, "
-                "only proceed if you're sure there are no better places to take the screenshot.",
-                "OK"
-            )->show();
-            return;
-        }
+        if (!AuthManager::get().roleIsEqualOrAbove(ThumbnailRole::VERIFIED)) {
+            constexpr double MIN_TIME = 5.0;
+            if (playLayer->m_gameState.m_levelTime < MIN_TIME && !m_fields->m_shownCloseToStartWarning) {
+                m_fields->m_shownCloseToStartWarning = true;
+                FLAlertLayer::create(
+                    "Warning",
+                    "You are trying to take a screenshot <cy>very close to level start</c>!\n"
+                    "There's a high chance it will be <cr>rejected</c> by moderators, "
+                    "only proceed if you're sure there are no better places to take the screenshot.",
+                    "OK"
+                )->show();
+                return;
+            }
 
-        if (playLayer->m_lowDetailMode && !m_fields->m_shownLowDetailWarning && !AuthManager::get().roleIsEqualOrAbove(ThumbnailRole::VERIFIED)) {
-            m_fields->m_shownLowDetailWarning = true;
-            FLAlertLayer::create(
-                "Warning",
-                "You are trying to take a screenshot with <cy>Low Detail Mode</c> enabled for this level!\n"
-                "In most cases this will lead to <cr>rejection</c> unless the level requires it as a gimmick.\n"
-                "Consider disabling it and re-entering the level.",
-                "OK"
-            )->show();
-            return;
+            if (playLayer->m_lowDetailMode && !m_fields->m_shownLowDetailWarning) {
+                m_fields->m_shownLowDetailWarning = true;
+                FLAlertLayer::create(
+                    "Warning",
+                    "You are trying to take a screenshot with <cy>Low Detail Mode</c> enabled for this level!\n"
+                    "In most cases this will lead to <cr>rejection</c> unless the level requires it as a gimmick.\n"
+                    "Consider disabling it and re-entering the level.",
+                    "OK"
+                )->show();
+                return;
+            }
         }
 
         for (auto child : playLayer->getChildrenExt()) {
@@ -172,7 +238,7 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
                 FLAlertLayer::create(
                     "Screenshot Error",
                     "You are trying to take a screenshot <cy>with Globed player icons.</c>!\n"
-                    "please <cj>disconnect</c> from the <co>Globed server</c> you are currently connected to and try again.",
+                    "Please <cj>disconnect</c> from the <co>Globed server</c> you are currently connected to and try again.",
                     "OK"
                 )->show();
                 return;
@@ -237,7 +303,7 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
         HIDE_NODE(playLayer, "tobyadd.gdh/labels_bottom");
         HIDE_NODE(playLayer, "tobyadd.gdh/labels_top");
         HIDE_NODE(playLayer, "thesillydoggo.qolmod/noclip-tint-overlay");
-        HIDE_NODE(playLayer->getChildByIDRecursive("batch-layer"), "zilko.editor_trail_in_game/drawy-node");
+        HIDE_NODE(playLayer->m_objectLayer, "zilko.editor_trail_in_game/drawy-node");
         auto aboveShaderNode = playLayer->m_shaderLayer->getParent();
         HIDE_NODE(aboveShaderNode, "eclipse.eclipse-menu/hitboxes");
         HIDE_NODE(aboveShaderNode, "eclipse.eclipse-menu/show-trajectory-draw-node");
