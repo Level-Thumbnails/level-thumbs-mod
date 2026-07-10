@@ -2,6 +2,7 @@
 - Added a popup when the level already has pending thumbnails.
 - Fixed gradient triggers turning the image transparent.
 - Submission note input box is now multiline.
+- Fixed the corrupted textures bug when changing game resolution/fullscreen mode 
 
 # v2.4.3
 - Improved badge caching even more.

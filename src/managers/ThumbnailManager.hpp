@@ -49,6 +49,7 @@ public:
 
     void saveDiskCache();
     void purgeCaches();
+    void purgeRuntimeCache();
 
 private:
     static ThumbnailKey getThumbnailKey(int32_t levelID, Quality quality);

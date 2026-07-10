@@ -417,6 +417,11 @@ void ThumbnailManager::purgeCaches() {
     }
 }
 
+void ThumbnailManager::purgeRuntimeCache() {
+    std::unique_lock lock(m_cacheMutex);
+    m_thumbnailCache.clear();
+}
+
 void ThumbnailManager::evictIfNeeded() {
     auto maxCacheSize = Settings::thumbnailCacheLimit();
     if (m_thumbnailCache.size() <= maxCacheSize) {
@@ -488,3 +493,7 @@ $on_mod(DataSaved) {
     ThumbnailManager::get().saveDiskCache();
 }
 #endif
+
+$on_game(TexturesUnloaded) {
+    ThumbnailManager::get().purgeRuntimeCache();
+}
