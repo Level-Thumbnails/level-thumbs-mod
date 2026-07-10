@@ -26,7 +26,7 @@ void ThumbnailPopup::onOpenFolder(CCObject* sender) {
     Notification::create("Copied ID to clipboard.", nullptr)->show();
 }
 
-class EditNotePopup : public Popup {
+class EditNotePopup : public Popup, public TextInputDelegate {
 public:
     static EditNotePopup* create(std::string currentNote, Function<void(std::string)> onSubmit) {
         auto ret = new EditNotePopup();
@@ -38,8 +38,13 @@ public:
         return nullptr;
     }
 
+    void textChanged(CCTextInputNode* input) override {
+        m_currentNote = input->getString();
+        m_charCountLabel->setString(fmt::format("{}/300", m_currentNote.size()).c_str());
+    }
+
     bool init(std::string currentNote, Function<void(std::string)> onSubmit) {
-        if (!Popup::init(300, 170, "square01_001.png"))
+        if (!Popup::init(300, 200, "square01_001.png"))
             return false;
 
         this->setTitle("Edit submission note");
@@ -54,17 +59,39 @@ public:
             280.f, kCCTextAlignmentCenter
         );
         label->setScale(0.9f);
-        m_mainLayer->addChildAtPosition(label, Anchor::Center, {0, 25});
+        m_mainLayer->addChildAtPosition(label, Anchor::Top, {0, -60});
 
-        auto textInput = TextInput::create(250, "Enter submission note...", "bigFont.fnt");
+        auto inputBg = NineSlice::create("square02_001.png");
+        inputBg->setContentSize({250, 60});
+        inputBg->setOpacity(128);
+        m_mainLayer->addChildAtPosition(inputBg, Anchor::Bottom, {0, 85});
+
+        auto charCount = CCLabelBMFont::create(fmt::format("{}/300", m_currentNote.size()).c_str(), "chatFont.fnt");
+        charCount->setScale(0.5f);
+        charCount->setOpacity(128);
+        charCount->setAnchorPoint({1.f, 0.f});
+        m_mainLayer->addChildAtPosition(charCount, Anchor::Bottom, {120, 58});
+        m_charCountLabel = charCount;
+
+        auto textInput = CCTextInputNode::create(310, 60, "Enter submission note...", "Thonburi", 24, nullptr);
+        textInput->setAllowedChars(getCommonFilterAllowedChars(CommonFilter::Any));
+        textInput->setMaxLabelLength(300);
+        textInput->setScale(0.7f);
+        textInput->setAnchorPoint({0.f, 0.f});
+        textInput->setLabelPlaceholderColor({200, 200, 200});
+        textInput->setDelegate(this);
+        textInput->addTextArea(TextArea::create("", "chatFont.fnt", 1.f, 280.f, {0.5f, 0.5f}, 20.f, true));
+        m_mainLayer->addChildAtPosition(textInput, Anchor::Bottom, {0, 85});
+        m_textInput = textInput;
+
         textInput->setString(m_currentNote);
-        textInput->setCommonFilter(CommonFilter::Any);
-        textInput->setMaxCharCount(300);
-        textInput->setCallback([this](auto& str){
-            m_currentNote = str;
-        });
 
-        m_mainLayer->addChildAtPosition(textInput, Anchor::Bottom, {0, 70});
+        // i love cocos
+        auto hiddenButton = CCMenuItemExt::create([this](CCMenuItem*) {
+            m_textInput->onClickTrackNode(!m_textInput->m_selected);
+        });
+        hiddenButton->setContentSize(inputBg->getContentSize());
+        m_buttonMenu->addChildAtPosition(hiddenButton, Anchor::Bottom, {0, 85});
 
         auto submitBtn = Button::createWithNode(
             ButtonSprite::create("Submit"),
@@ -92,6 +119,8 @@ public:
 private:
     Function<void(std::string)> m_onSubmit;
     std::string m_currentNote;
+    CCTextInputNode* m_textInput = nullptr;
+    CCLabelBMFont* m_charCountLabel = nullptr;
 };
 
 void ThumbnailPopup::onEditNote(CCObject* sender) {
