@@ -42,7 +42,7 @@ static std::string getErrorMessage(web::WebResponse const& res) {
         auto json = std::move(jsonRes).unwrap();
 
         std::string message;
-        if (json["reason"].isString()) {
+        if (json["reason"].isString() && res.code() != 403) {
             message = json["reason"].asString().unwrap();
         } else if (json["message"].isString()) {
             message = json["message"].asString().unwrap();

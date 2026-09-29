@@ -8,10 +8,10 @@ namespace compat {
             bool wasEnabled;
 
             EclipseSetting(ZStringView id)
-                : id(id), wasEnabled(eclipse::config::get<bool>(id, false)) {}
+                : id(id), wasEnabled(eclipse::config::getInternal<bool>(id, false)) {}
 
             ~EclipseSetting() {
-                eclipse::config::set<bool>(id, wasEnabled);
+                eclipse::config::setInternal<bool>(id, wasEnabled);
             }
         };
 
@@ -31,7 +31,7 @@ namespace compat {
                 {"level.legacytrail", "Legacy Trail"},
                 {"player.norobotfire", "No Robot Fire"}
             }) {
-                if (eclipse::config::get<bool>(id, false)) {
+                if (eclipse::config::getInternal<bool>(id, false)) {
                     return Err("Please disable <co>{}</c> in <cj>Eclipse Menu</c> and restart the level to be able to take thumbnails.", name);
                 }
             }

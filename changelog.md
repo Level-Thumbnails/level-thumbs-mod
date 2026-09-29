@@ -1,3 +1,7 @@
+# v2.6.1
+- Fixed the error message for bans not showing the full message
+- Fixed Eclipse Menu integration not detecting certain mods
+
 # v2.6.0
 - Greatly improve compatibility with any overlay mods (both existing and future ones).
 - Improved error messages when submitting thumbnails.
