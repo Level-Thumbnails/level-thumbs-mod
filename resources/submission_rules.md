@@ -26,4 +26,6 @@
 
 14. Do not submit thumbnails for NSFW levels.
 
-15. Do not put slurs in your submission notes.
+15. Do not submit thumbnails for leaked levels (including any modified versions of them).
+
+16. Do not put slurs in your submission notes.
