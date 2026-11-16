@@ -1,4 +1,4 @@
-1. Before submitting, if the thumbnail preview looks AT ALL different from the level, do not submit it. The screenshot tool isn't perfect and bugs do get through.
+1. Before submitting, if the thumbnail preview looks AT ALL different from the level, do not submit it, as what you see in the preview is EXACTLY what ends up getting submitted. The screenshot tool isn't perfect and bugs do get through.
 
 2. Overlays of any kind are not allowed. While many are already automatically disabled by the mod, not all of them are. Anything that's added onto the screen by a mod is an overlay.
 
@@ -24,10 +24,14 @@
 
 13. Avoid submitting thumbnails for random recent tab levels, there are a LOT of thumbnails for the mods to go through and little Timmy levels do not need thumbnails.
 
-14. Do not submit thumbnails for NSFW levels.
+14. Please only replace thumbnails if: The current thumbnail breaks the rules; there is an obviously better, substantially different frame for the thumbnail; or the creator requested your replacement/you are the creator and want a different thumbnail.
 
-15. Do not submit thumbnails for leaked levels (including any modified versions of them).
+15. If you make a thumbnail replacement, please make a clear and descriptive submission note on why you are replacing the current thumbnail. Please do not just write things like "hi" or "this is my thumbnail".
 
-16. Do not submit thumbnails for AI-generated levels.
+16. Do not submit thumbnails for NSFW levels.
 
-17. Do not put slurs in your submission notes.
+17. Do not submit thumbnails for leaked levels (including any modified versions of them).
+
+18. Do not submit thumbnails for AI-generated levels.
+
+19. Do not put slurs in your submission notes.
