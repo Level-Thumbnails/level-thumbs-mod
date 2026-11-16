@@ -1,4 +1,4 @@
-1. Before submitting, if the thumbnail preview looks AT ALL different from the level, do not submit it. The screenshot tool isn't perfect and bugs do get through.
+1. Before submitting, if the thumbnail preview looks AT ALL different from the level, do not submit it, as what you see in the preview is EXACTLY what ends up getting submitted. The screenshot tool isn't perfect and bugs do get through.
 
 2. Overlays of any kind are not allowed. While many are already automatically disabled by the mod, not all of them are. Anything that's added onto the screen by a mod is an overlay.
 
