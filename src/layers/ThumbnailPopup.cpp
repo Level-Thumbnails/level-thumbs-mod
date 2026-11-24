@@ -1,6 +1,6 @@
 #include "ThumbnailPopup.hpp"
 #include <chrono>
-#include <argon/argon.hpp>
+#include <dankmeme.argon/argon.hpp>
 #include <fmt/format.h>
 #include <Geode/Geode.hpp>
 #include <Geode/cocos/textures/CCTextureCache.h>
@@ -80,7 +80,7 @@ public:
         textInput->setAnchorPoint({0.f, 0.f});
         textInput->setLabelPlaceholderColor({200, 200, 200});
         textInput->setDelegate(this);
-        textInput->addTextArea(TextArea::create("", "chatFont.fnt", 1.f, 280.f, {0.5f, 0.5f}, 20.f, true));
+        textInput->addTextArea(TextArea::create("", "chatFont.fnt", 1.f, 280.f, {0.5f, 0.5f}, 20.f, true, 0));
         m_mainLayer->addChildAtPosition(textInput, Anchor::Bottom, {0, 85});
         m_textInput = textInput;
 
@@ -174,12 +174,8 @@ void ThumbnailPopup::openDiscordServerPopup(CCObject* sender) {
     }
 }
 
-static std::filesystem::path strToPath(std::string_view str) {
-#ifdef GEODE_IS_WINDOWS
-    return string::utf8ToWide(str);
-#else
-    return std::filesystem::path(str);
-#endif
+static asp::fs::Path strToPath(std::string_view str) {
+    return asp::fs::Path(str);
 }
 
 void ThumbnailPopup::runSubmissionLogic() {
@@ -707,9 +703,9 @@ void ThumbnailPopup::ccTouchEnded(CCTouch* pTouch, CCEvent* event){
     //geode::log::info("ended");
 }
 
-void ThumbnailPopup::scrollWheel(float y, float x) {
+bool ThumbnailPopup::scrollWheel(float y, float x) {
     CCNode* thumbnail = m_thumbnail;
-    if (!thumbnail) return;
+    if (!thumbnail) return false;
 
     constexpr float zoomSpeed = 0.01f;
 
@@ -718,7 +714,7 @@ void ThumbnailPopup::scrollWheel(float y, float x) {
     newScale = clip(newScale, 0.25f, 6.f);
 
     if (std::abs(newScale - oldScale) < 0.0001f)
-        return;
+        return false;
 
     CCPoint mouseWorld = getMousePos();
     CCPoint localBefore = thumbnail->convertToNodeSpace(mouseWorld);
@@ -727,4 +723,5 @@ void ThumbnailPopup::scrollWheel(float y, float x) {
     CCPoint worldAfter = thumbnail->convertToWorldSpace(localBefore);
     CCPoint diff = mouseWorld - worldAfter;
     thumbnail->setPosition(thumbnail->getPosition() + diff);
+    return true;
 }

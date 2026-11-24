@@ -55,7 +55,7 @@ protected:
     void ccTouchMoved(cocos2d::CCTouch* pTouch, cocos2d::CCEvent* event) override;
     void ccTouchEnded(cocos2d::CCTouch* pTouch, cocos2d::CCEvent* event) override;
 
-    void scrollWheel(float y, float x) override;
+    bool scrollWheel(float y, float x) override;
 
 public:
     static ThumbnailPopup* create(int id, bool screenshotPreview = false);
