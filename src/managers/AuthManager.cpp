@@ -4,7 +4,7 @@
 #include <Geode/Result.hpp>
 #include <matjson.hpp>
 #include <string>
-#include <argon/argon.hpp>
+#include <dankmeme.argon/argon.hpp>
 #include <Geode/modify/AccountHelpLayer.hpp>
 #include <Geode/ui/Notification.hpp>
 #include <Geode/utils/web.hpp>
@@ -76,7 +76,7 @@ static std::string getErrorMessage(web::WebResponse const& res) {
     return buf.str();
 }
 
-AuthManager::UploadFuture AuthManager::uploadThumbnail(std::filesystem::path filename, int levelID, std::string note, Function<void(ZStringView)> onProgress) {
+AuthManager::UploadFuture AuthManager::uploadThumbnail(asp::fs::Path filename, int levelID, std::string note, Function<void(ZStringView)> onProgress) {
     if (onProgress) onProgress("Logging in...");
 
     if (!this->isLoggedIn()) {
@@ -340,10 +340,12 @@ AuthManager::LoginFuture AuthManager::login() {
             co_return Err("Incompatible Geometry Dash server URL: <cr>{}</c> (expected <cy>{}</c>)", data->serverUrl, m_serverMetadata->gdBaseUrl);
         }
 
-        GEODE_CO_UNWRAP(argon::setServerUrl(m_serverMetadata->argonBaseUrl));
+        argon::overrideArgonServer(m_serverMetadata->argonBaseUrl);
     }
 
-    auto argonRes = co_await argon::startAuth(data.value());
+    argon::overrideAccount(std::move(data));
+
+    auto argonRes = co_await argon::startAuth();
     if (!argonRes) {
         co_return Err(fmt::format("Argon auth error: {}", argonRes.unwrapErr()));
     }

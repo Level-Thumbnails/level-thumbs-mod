@@ -10,7 +10,7 @@
 #include "../utils/RenderTexture.hpp"
 #include "../utils/SubmissionNotes.hpp"
 
-#include <prevter.imageplus/include/api.hpp>
+#include <prevter.imageplus/api.hpp>
 
 using namespace geode::prelude;
 
@@ -25,8 +25,8 @@ class $modify(LTPlayLayer, PlayLayer) {
         (void) self.setHookPriority("PlayLayer::destroyPlayer", -0x600000);
     }
 
-    bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
-        if (!PlayLayer::init(level, useReplay, dontCreateObjects)) {
+    bool init(GJGameLevel* level, bool dontCreateObjects) {
+        if (!PlayLayer::init(level, dontCreateObjects)) {
             return false;
         }
 
@@ -317,14 +317,14 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
         // hide practice checkpoints
         std::vector<HideGameObject> hideGameObjects;
         if (playLayer->m_isPracticeMode) {
-            if (auto current = playLayer->m_currentCheckpoint) {
+            if (auto current = playLayer->getLastCheckpoint()) {
                 if (auto obj = current->m_physicalCheckpointObject) {
                     hideGameObjects.emplace_back(obj);
                 }
             }
 
             for (auto checkpoint : playLayer->m_checkpointArray->asExt<CheckpointObject*>()) {
-                if (checkpoint == playLayer->m_currentCheckpoint) continue;
+                if (checkpoint == playLayer->getLastCheckpoint()) continue;
                 if (auto obj = checkpoint->m_physicalCheckpointObject) {
                     hideGameObjects.emplace_back(obj);
                 }
@@ -505,7 +505,7 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
             return;
         }
 
-        ThumbnailPopup::create(levelID, string::pathToString(saveDir), notes::buildSubmissionNote())->show();
+        ThumbnailPopup::create(levelID, saveDir.string(), notes::buildSubmissionNote())->show();
     }
 
     static void GLScalef(float x, float y, float z) {
