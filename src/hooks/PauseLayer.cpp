@@ -131,7 +131,7 @@ class $modify(ThumbnailPauseLayer, PauseLayer) {
             return;
         }
 
-        auto rightButtonMenu = this->getChildByID("right-button-menu");
+        auto rightButtonMenu = this->getChildByIDRecursive("right-button-menu");
         if (!rightButtonMenu) {
             return;
         }
