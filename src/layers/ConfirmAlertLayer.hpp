@@ -49,7 +49,7 @@ class ConfirmAlertLayer : public CCLayerColor {
     }
 
     bool init(
-        char const* title, gd::string caption,
+        char const* title, std::string caption,
         char const* button1, char const* button2,
         float width, bool border,
         float height
@@ -60,7 +60,7 @@ class ConfirmAlertLayer : public CCLayerColor {
         float checkboxMargin = 20;
 
         // handle touch prio
-        cocos2d::CCTouchDispatcher::get()->registerForcePrio(this, 2);
+        cocos2d::CCTouchDispatcher::get()->registerForcePrio(this, 2, 0);
         //this->registerWithTouchDispatcher();
 
         //this->setTouchPriority(-999);
@@ -81,7 +81,7 @@ class ConfirmAlertLayer : public CCLayerColor {
         if (!m_containsBorder) {
             if (!m_scrollable) {
                 textArea = TextArea::create(
-                    std::move(caption), "chatFont.fnt", 1.0, width - 60.0f, CCPointMake(0.5, 0.5), 20.0, false
+                    std::move(caption), "chatFont.fnt", 1.0, width - 60.0f, CCPointMake(0.5, 0.5), 20.0, false, 0
                 );
                 m_mainLayer->addChild(textArea, 3);
                 height = textArea->m_obRect.size.height + 120;
@@ -262,14 +262,14 @@ public:
     CCNode* m_scene = nullptr;
 
     static ConfirmAlertLayer* create(
-        geode::Function<void(bool)> callback, char const* title, gd::string caption, char const* button1,
+        geode::Function<void(bool)> callback, char const* title, std::string caption, char const* button1,
         char const* button2
     ) {
         return create(std::move(callback), title, std::move(caption), button1, button2, 350.0, false, 0.0);
     }
 
     static ConfirmAlertLayer* create(
-        geode::Function<void(bool)> callback, char const* title, gd::string caption, char const* button1,
+        geode::Function<void(bool)> callback, char const* title, std::string caption, char const* button1,
         char const* button2, float width
     ) {
         return create(std::move(callback), title, std::move(caption), button1, button2, width, false, 0.0);
@@ -283,7 +283,7 @@ public:
     }
 
     static ConfirmAlertLayer* create(
-        geode::Function<void(bool)> callback, char const* title, gd::string caption, char const* button1,
+        geode::Function<void(bool)> callback, char const* title, std::string caption, char const* button1,
         char const* button2, float width, bool border, float height, bool scrollable = false, std::string filePath = ""
     ) {
         auto ret = new ConfirmAlertLayer();

@@ -56,16 +56,21 @@ ThumbnailManager::ThumbnailManager() {
     evictDiskCache();
 
     // remove stray files
-    std::error_code ec;
-    for (auto const& dir : std::filesystem::directory_iterator(Mod::get()->getSaveDir() / "cache", ec)) {
-        for (auto const& f : std::filesystem::directory_iterator(dir, ec)) {
-            bool referenced = std::ranges::any_of(m_fileCache,
-                [&](auto const& kv) {
-                    return getThumbnailPath(kv.second.host, kv.second.levelID, kv.second.quality) == f.path();
+    if (auto dirs = asp::fs::iterDir(Mod::get()->getSaveDir() / "cache")) {
+        for (auto&& dir : dirs.unwrap()) {
+            if (!dir) continue;
+            auto files = asp::fs::iterDir(dir.unwrap().path);
+            if (!files) continue;
+            for (auto&& f : files.unwrap()) {
+                if (!f) continue;
+                bool referenced = std::ranges::any_of(m_fileCache,
+                    [&](auto const& kv) {
+                        return getThumbnailPath(kv.second.host, kv.second.levelID, kv.second.quality) == f.unwrap().path;
+                    }
+                );
+                if (!referenced) {
+                    (void) asp::fs::remove(f.unwrap().path);
                 }
-            );
-            if (!referenced) {
-                std::filesystem::remove(f.path(), ec);
             }
         }
     }
@@ -248,30 +253,29 @@ std::string ThumbnailManager::getThumbnailUrl(int32_t levelID, Quality quality) 
 }
 
 #ifndef DISABLE_FILE_CACHING
-std::filesystem::path ThumbnailManager::getThumbnailPath(int32_t levelID, Quality quality) {
+asp::fs::Path ThumbnailManager::getThumbnailPath(int32_t levelID, Quality quality) {
     // i know legacy api uses png, but tracking separate extensions is harder
     return getCacheDirectory() / fmt::format("{}-{}.webp", levelID, quality);
 }
 
-std::filesystem::path ThumbnailManager::getThumbnailPath(std::string_view api, int32_t levelID, Quality quality) {
+asp::fs::Path ThumbnailManager::getThumbnailPath(std::string_view api, int32_t levelID, Quality quality) {
     return Mod::get()->getSaveDir()
          / "cache"
          / fmt::to_string(std::hash<std::string_view>{}(api))
          / fmt::format("{}-{}.webp", levelID, quality);
 }
 
-std::filesystem::path const& ThumbnailManager::getCacheDirectory() {
-    static std::filesystem::path path = (
+asp::fs::Path const& ThumbnailManager::getCacheDirectory() {
+    static asp::fs::Path path = (
         listenForSettingChanges<std::string>("level-thumbnails-api", [](std::string val) {
             path = Mod::get()->getSaveDir() / "cache" / fmt::to_string(std::hash<std::string_view>{}(val));
         }),
         Mod::get()->getSaveDir() / "cache" / fmt::to_string(std::hash<std::string_view>{}(Settings::thumbnailAPIBaseURL()))
     );
 
-    std::error_code ec;
-    std::filesystem::create_directories(path, ec);
-    if (ec) {
-        log::warn("Failed to create thumbnail cache directory: {}", ec.message());
+    auto res = asp::fs::createDirAll(path);
+    if (!res) {
+        log::warn("Failed to create thumbnail cache directory: {}", res.unwrapErr());
     }
 
     return path;
@@ -286,10 +290,9 @@ void ThumbnailManager::cleanupFileCacheEntry(int32_t levelID, Quality quality) {
         m_fileCache.erase(it);
     }
 
-    std::error_code ec;
-    std::filesystem::remove(getThumbnailPath(levelID, quality), ec);
-    if (ec) {
-        log::warn("Failed to remove cached thumbnail {}: {}", getThumbnailPath(levelID, quality), ec.message());
+    auto res = asp::fs::remove(getThumbnailPath(levelID, quality));
+    if (!res) {
+        log::warn("Failed to remove cached thumbnail {}: {}", getThumbnailPath(levelID, quality), res.unwrapErr());
     }
 }
 
@@ -410,10 +413,9 @@ void ThumbnailManager::purgeCaches() {
         m_fileCache.clear();
     }
 
-    std::error_code ec;
-    std::filesystem::remove_all(getCacheDirectory(), ec);
-    if (ec) {
-        log::warn("Failed to clear thumbnail disk cache: {}", ec.message());
+    auto res = asp::fs::removeDirAll(getCacheDirectory(), false);
+    if (!res) {
+        log::warn("Failed to clear thumbnail disk cache: {}", res.unwrapErr());
     }
 }
 
@@ -455,10 +457,9 @@ void ThumbnailManager::evictDiskCache() {
 
     // delete all files
     if (limit == 0) {
-        std::error_code ec;
-        std::filesystem::remove_all(getCacheDirectory(), ec);
-        if (ec) {
-            log::warn("Failed to clear thumbnail disk cache: {}", ec.message());
+        auto res = asp::fs::removeDirAll(getCacheDirectory(), false);
+        if (!res) {
+            log::warn("Failed to clear thumbnail disk cache: {}", res.unwrapErr());
         } else {
             m_fileCache.clear();
         }
@@ -475,15 +476,14 @@ void ThumbnailManager::evictDiskCache() {
         );
 
         if (it == m_fileCache.end()) break;
-        std::error_code ec;
-        std::filesystem::remove(getThumbnailPath(
+        auto res = asp::fs::remove(getThumbnailPath(
             it->second.host,
             it->second.levelID,
             it->second.quality
-        ), ec);
+        ));
 
-        if (ec) {
-            log::warn("Failed to remove cached thumbnail file: {}", ec.message());
+        if (!res) {
+            log::warn("Failed to remove cached thumbnail file: {}", res.unwrapErr());
         }
         m_fileCache.erase(it);
     }

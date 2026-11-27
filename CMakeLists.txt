@@ -21,13 +21,11 @@ endif()
 
 add_subdirectory($ENV{GEODE_SDK} ${CMAKE_CURRENT_BINARY_DIR}/geode)
 
-# add argon 
-CPMAddPackage("gh:GlobedGD/argon@1.5.1")
-target_link_libraries(${PROJECT_NAME} argon)
+# argon is a geode mod dependency now (dankmeme.argon), added as an external below
 
 # read version from mod.json and set as define
 file(READ "${CMAKE_CURRENT_SOURCE_DIR}/mod.json" MOD_JSON_CONTENTS)
 string(JSON MOD_VERSION GET "${MOD_JSON_CONTENTS}" version)
 target_compile_definitions(${PROJECT_NAME} PRIVATE MOD_VERSION="${MOD_VERSION}")
 
-setup_geode_mod(${PROJECT_NAME} EXTERNALS geode.node-ids:1.7.1)
+setup_geode_mod(${PROJECT_NAME} EXTERNALS geode.node-ids:1.24.0-beta.1)
